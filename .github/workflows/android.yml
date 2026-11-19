@@ -1,0 +1,25 @@
+name: Dünya Bayrakları APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodları indir
+        uses: actions/checkout@v4
+
+      - name: APK oluştur
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          buildozer_version: stable
+
+      - name: APK dosyasını kaydet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dunya-bayraklari-apk
+          path: ${{ steps.buildozer.outputs.filename }}
