@@ -1,6 +1,11 @@
+import requests
+import threading
+from kivy.uix.textinput import TextInput
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
@@ -189,28 +194,56 @@ class GameScreen(BaseScreen):
             country, capital, flag = self.questions[self.index]
             root.add_widget(make_label(country, 34, 65))
             root.add_widget(make_flag_image(country, 145))
-            root.add_widget(make_label("Bu ülkenin başkenti hangisi?", 22, 65))
+            root.add_widget(make_label("Bu ülkenin başkenti hangisi?", 30, 85))
             choices = [capital] + random.sample(
                 [c[1] for c in COUNTRIES if c[1] != capital], 3
             )
             random.shuffle(choices)
+            grid = GridLayout(
+                cols=2, spacing=16, padding=12,
+                size_hint=(1, None), height=232,
+                row_force_default=True, row_default_height=100
+            )
             for choice in choices:
-                root.add_widget(make_button(
-                    choice, lambda x, a=choice: self.answer(a, capital)
+                grid.add_widget(make_button(
+                    choice, lambda x, a=choice: self.answer(a, capital),
+                    height=100, size=27
                 ))
+            anchor = AnchorLayout(
+                anchor_x="center",
+                anchor_y="center",
+                size_hint=(1, None),
+                height=270
+            )
+            anchor.add_widget(grid)
+            root.add_widget(anchor)
 
         elif self.mode == "flag":
             country, capital, flag = self.questions[self.index]
             root.add_widget(make_flag_image(country, 170))
-            root.add_widget(make_label("Bu bayrak hangi ülkenin?", 23, 65))
+            root.add_widget(make_label("Bu bayrak hangi ülkenin?", 30, 85))
             choices = [country] + random.sample(
                 [c[0] for c in COUNTRIES if c[0] != country], 3
             )
             random.shuffle(choices)
+            grid = GridLayout(
+                cols=2, spacing=16, padding=12,
+                size_hint=(1, None), height=232,
+                row_force_default=True, row_default_height=100
+            )
             for choice in choices:
-                root.add_widget(make_button(
-                    choice, lambda x, a=choice: self.answer(a, country)
+                grid.add_widget(make_button(
+                    choice, lambda x, a=choice: self.answer(a, country),
+                    height=100, size=27
                 ))
+            anchor = AnchorLayout(
+                anchor_x="center",
+                anchor_y="center",
+                size_hint=(1, None),
+                height=270
+            )
+            anchor.add_widget(grid)
+            root.add_widget(anchor)
 
         elif self.mode in ("match", "pair"):
             if not self.match_pairs:
@@ -341,11 +374,159 @@ class SettingsScreen(BaseScreen):
     def home(self):
         self.manager.current = "home"
 
+
+class AuthScreen(BaseScreen):
+    def on_pre_enter(self):
+        self.clear_widgets()
+        root = self.layout("🌍 OYUNCU GİRİŞİ")
+
+        self.username = TextInput(
+            hint_text="Kullanıcı adı",
+            multiline=False,
+            size_hint_y=None,
+            height=55
+        )
+        self.email = TextInput(
+            hint_text="E-posta adresi",
+            multiline=False,
+            size_hint_y=None,
+            height=55
+        )
+        self.password = TextInput(
+            hint_text="Şifre",
+            password=True,
+            multiline=False,
+            size_hint_y=None,
+            height=55
+        )
+
+        root.add_widget(self.username)
+        root.add_widget(self.email)
+        root.add_widget(self.password)
+
+        root.add_widget(make_button(
+            "KAYIT OL", self.signup
+        ))
+        root.add_widget(make_button(
+            "GİRİŞ YAP", self.login
+        ))
+
+        self.status = make_label("", 16, 75)
+        root.add_widget(self.status)
+
+    def show_message(self, message):
+        self.status.text = message
+
+    def signup(self, instance):
+        username = self.username.text.strip()
+        email = self.email.text.strip()
+        password = self.password.text
+
+        if not username or not email or not password:
+            self.show_message("Tüm alanları doldur.")
+            return
+
+        self.show_message("Kayıt işlemi yapılıyor...")
+        threading.Thread(
+            target=self.signup_request,
+            args=(username, email, password),
+            daemon=True
+        ).start()
+
+    def signup_request(self, username, email, password):
+        try:
+            response = requests.post(
+                SUPABASE_URL + "/auth/v1/signup",
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "email": email,
+                    "password": password,
+                    "data": {"username": username}
+                },
+                timeout=20
+            )
+
+            if response.status_code >= 400:
+                data = response.json()
+                message = data.get("msg") or data.get("message") or "Kayıt başarısız."
+            else:
+                message = "Kayıt başarılı! E-postanı doğrula, sonra giriş yap."
+
+        except Exception:
+            message = "Bağlantı kurulamadı. İnternetini kontrol et."
+
+        Clock.schedule_once(
+            lambda dt: self.show_message(message)
+        )
+
+    def login(self, instance):
+        email = self.email.text.strip()
+        password = self.password.text
+
+        if not email or not password:
+            self.show_message("E-posta ve şifreni gir.")
+            return
+
+        self.show_message("Giriş yapılıyor...")
+        threading.Thread(
+            target=self.login_request,
+            args=(email, password),
+            daemon=True
+        ).start()
+
+    def login_request(self, email, password):
+        try:
+            response = requests.post(
+                SUPABASE_URL + "/auth/v1/token?grant_type=password",
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "email": email,
+                    "password": password
+                },
+                timeout=20
+            )
+
+            data = response.json()
+
+            if response.status_code >= 400:
+                message = data.get("msg") or data.get("message") or "Giriş başarısız."
+            else:
+                user = data.get("user", {})
+                username = user.get("user_metadata", {}).get("username")
+                username = username or "Kaşif"
+
+                store.put(
+                    "auth",
+                    access_token=data["access_token"],
+                    user_id=user["id"]
+                )
+                store.put("player", name=username)
+                message = "Giriş başarılı!"
+
+                Clock.schedule_once(
+                    lambda dt: setattr(self.manager, "current", "home")
+                )
+
+        except Exception:
+            message = "Bağlantı kurulamadı. Tekrar dene."
+
+        Clock.schedule_once(
+            lambda dt: self.show_message(message)
+        )
+
+
 class DunyaBayraklariApp(App):
     def build(self):
         if not store.exists("player"):
             store.put("player", name="Kaşif")
         sm = ScreenManager()
+        sm.add_widget(AuthScreen(name="auth"))
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(LevelScreen(name="levels"))
         sm.add_widget(GameMenu(name="games"))
