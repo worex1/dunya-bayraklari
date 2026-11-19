@@ -8,19 +8,39 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Kodları indir
         uses: actions/checkout@v4
 
-      - name: Buildozer ile APK oluştur
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Java kur
+        uses: actions/setup-java@v4
         with:
-          workdir: .
-          buildozer_version: stable
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gerekli paketleri kur
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            cmake libffi-dev libssl-dev \
+            automake openjdk-17-jdk
+
+      - name: Python ve Buildozer kur
+        run: |
+          python3 -m pip install --upgrade pip --user
+          python3 -m pip install --user buildozer cython==0.29.34
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: APK oluştur
+        run: buildozer -v android debug
 
       - name: APK dosyasını kaydet
         uses: actions/upload-artifact@v4
         with:
           name: dunya-bayraklari-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
+          if-no-files-found: error
