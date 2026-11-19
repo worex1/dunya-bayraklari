@@ -42,11 +42,11 @@ def button(text, callback, color="#4385E8"):
     b = Button(
         text=text,
         size_hint_y=None,
-        height=55,
+        height=75,
         background_normal="",
         background_color=get_color_from_hex(color),
         color=(1, 1, 1, 1),
-        font_size=17
+        font_size=21
     )
     b.bind(on_release=callback)
     return b
@@ -56,7 +56,7 @@ class BaseScreen(Screen):
         root = BoxLayout(
             orientation="vertical",
             padding=18,
-            spacing=12
+            spacing=16
         )
         root.add_widget(Label(
             text=title,
@@ -80,7 +80,7 @@ class HomeScreen(BaseScreen):
         root.add_widget(Label(
             text=f"Merhaba {username}!\nGünlük doğrular: 0   |   Toplam doğrular: {total}",
             color=(0.1, 0.2, 0.4, 1),
-            font_size=17,
+            font_size=21,
             size_hint_y=None,
             height=65
         ))
@@ -154,7 +154,7 @@ class GameScreen(BaseScreen):
         self.index = 0
         self.correct = 0
         self.wrong = 0
-        self.hearts = 2
+        self.hearts = 4
         self.locked = False
         self.seconds = 120 if mode == "timed" else 0
         self.clear_widgets()
@@ -180,7 +180,7 @@ class GameScreen(BaseScreen):
         self.root.add_widget(Label(
             text=f"DOĞRULAR: {self.correct}     ❤️ {self.hearts}",
             color=get_color_from_hex("#258B50"),
-            font_size=19,
+            font_size=23,
             size_hint_y=None,
             height=45
         ))
@@ -203,11 +203,11 @@ class GameScreen(BaseScreen):
         if self.mode == "capital":
             self.root.add_widget(Label(
                 text=country.upper(),
-                font_size=30,
+                font_size=36,
                 bold=True,
                 color=get_color_from_hex("#2868BD"),
                 size_hint_y=None,
-                height=90
+                height=110
             ))
             self.root.add_widget(Label(
                 text="DOĞRU BAŞKENTİ SEÇ",
@@ -222,7 +222,7 @@ class GameScreen(BaseScreen):
         elif self.mode == "pair":
             self.root.add_widget(Label(
                 text=country.upper(),
-                font_size=30,
+                font_size=36,
                 color=get_color_from_hex("#2868BD")
             ))
             self.root.add_widget(Label(
