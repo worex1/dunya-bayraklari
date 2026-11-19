@@ -3,6 +3,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.image import Image
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.storage.jsonstore import JsonStore
@@ -46,11 +47,31 @@ def make_button(text, callback, color="#4385E8", height=70, size=21):
 
 def make_label(text, size=25, height=100):
     return Label(
-        text=text, font_size=size, bold=True,
+        text=text,
+        font_size=size,
+        bold=True,
         color=get_color_from_hex("#243B63"),
-        halign="center", valign="middle",
-        size_hint_y=None, height=height
+        halign="center",
+        valign="middle",
+        text_size=(Window.width - 30, None),
+        size_hint_y=None,
+        height=height
     )
+
+
+def make_flag_image(country, height=145):
+    import json
+    with open("flag_codes.json", "r", encoding="utf-8") as f:
+        codes = json.load(f)
+    code = codes[country]
+    return Image(
+        source=f"flags/{code}.png",
+        size_hint=(1, None),
+        height=height,
+        allow_stretch=True,
+        keep_ratio=True
+    )
+
 
 class BaseScreen(Screen):
     def layout(self, title):
@@ -142,9 +163,9 @@ class GameScreen(BaseScreen):
         self.seconds -= 1
         if self.seconds <= 0:
             self.finish()
-        else:
-            if self.manager and self.manager.current == "game":
-                self.show_question()
+        elif self.manager and self.manager.current == "game":
+            if hasattr(self, "timer_label"):
+                self.timer_label.text = f"⏱️ Kalan süre: {self.seconds} saniye"
 
     def status(self):
         return f"✅ Doğru: {self.correct}     ❌ Yanlış: {self.wrong}     ❤️ Can: {self.hearts}"
@@ -155,7 +176,10 @@ class GameScreen(BaseScreen):
         root.add_widget(make_label(self.status(), 18, 45))
 
         if self.mode == "flag":
-            root.add_widget(make_label(f"⏱️ Kalan süre: {self.seconds} saniye", 20, 45))
+            self.timer_label = make_label(
+                f"⏱️ Kalan süre: {self.seconds} saniye", 20, 45
+            )
+            root.add_widget(self.timer_label)
 
         if self.hearts <= 0 or self.index >= len(self.questions):
             self.finish()
@@ -163,7 +187,8 @@ class GameScreen(BaseScreen):
 
         if self.mode in ("capital", "all"):
             country, capital, flag = self.questions[self.index]
-            root.add_widget(make_label(country + "\n" + flag, 34, 145))
+            root.add_widget(make_label(country, 34, 65))
+            root.add_widget(make_flag_image(country, 145))
             root.add_widget(make_label("Bu ülkenin başkenti hangisi?", 22, 65))
             choices = [capital] + random.sample(
                 [c[1] for c in COUNTRIES if c[1] != capital], 3
@@ -176,7 +201,7 @@ class GameScreen(BaseScreen):
 
         elif self.mode == "flag":
             country, capital, flag = self.questions[self.index]
-            root.add_widget(make_label(flag, 100, 150))
+            root.add_widget(make_flag_image(country, 170))
             root.add_widget(make_label("Bu bayrak hangi ülkenin?", 23, 65))
             choices = [country] + random.sample(
                 [c[0] for c in COUNTRIES if c[0] != country], 3
