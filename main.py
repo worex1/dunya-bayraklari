@@ -14,6 +14,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.storage.jsonstore import JsonStore
 from kivy.utils import get_color_from_hex
+from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.clock import Clock
 from datetime import date
 import random
@@ -45,11 +46,23 @@ def get_daily():
 def make_button(text, callback, color="#4385E8", height=105, size=30):
     b = Button(
         text=text, size_hint_y=None, height=height,
-        background_normal="", background_color=get_color_from_hex(color),
+        background_normal="", background_color=(0, 0, 0, 0),
         color=(1,1,1,1), font_size=size, bold=True,
         halign="center", valign="middle",
         text_size=(Window.width * 0.42, None)
     )
+
+    with b.canvas.before:
+        b.round_color = Color(*get_color_from_hex(color))
+        b.round_rect = RoundedRectangle(
+            pos=b.pos, size=b.size, radius=[22]
+        )
+
+    def update_button(widget, value):
+        widget.round_rect.pos = widget.pos
+        widget.round_rect.size = widget.size
+
+    b.bind(pos=update_button, size=update_button)
     b.bind(on_release=callback)
     return b
 
@@ -83,6 +96,11 @@ def make_flag_image(country, height=145):
 
 class BaseScreen(Screen):
     def layout(self, title):
+        if not hasattr(self, "bg_rect"):
+            with self.canvas.before:
+                Color(1, 1, 1, 1)
+                self.bg_rect = Rectangle(source="arka_plan.png", pos=self.pos, size=self.size)
+            self.bind(pos=lambda w, v: setattr(self.bg_rect, "pos", v), size=lambda w, v: setattr(self.bg_rect, "size", v))
         root = BoxLayout(
             orientation="vertical",
             size_hint=(0.94, None),
@@ -105,7 +123,7 @@ class HomeScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("🌍 DÜNYA BAYRAKLARI")
-        name = store.get("player")["name"] if store.exists("player") else "Kaşif"
+        name = store.get("player")["name"] if store.exists("player") else "Oyuncu"
         root.add_widget(make_label(
             f"Merhaba {name}!\nGünlük doğrular: {get_daily()}   |   Toplam: {get_total()}",
             19, 75
@@ -192,7 +210,7 @@ class GameScreen(BaseScreen):
                 self.timer_label.text = f"⏱️ Kalan süre: {self.seconds} saniye"
 
     def status(self):
-        return f"✅ Doğru: {self.correct}     ❌ Yanlış: {self.wrong}     ❤️ Can: {self.hearts}"
+        return f"DOGRU: {self.correct}     YANLIS: {self.wrong}     CAN: {self.hearts}"
 
     def show_question(self):
         self.clear_widgets()
@@ -302,11 +320,22 @@ class GameScreen(BaseScreen):
             for i in range(max(len(left), len(right))):
                 if i < len(left):
                     c = left[i]
-                    txt = c[2] if self.mode == "match" else c[0]
-                    grid.add_widget(make_button(
-                        txt, lambda x, item=c: self.choose_left(item),
-                        color="#8B65C7", height=60, size=20
-                    ))
+                    if self.mode == "match":
+                        flag_box = Button(
+                            text="",
+                            size_hint_y=None,
+                            height=60,
+                            background_normal="",
+                            background_color=get_color_from_hex("#8B65C7")
+                        )
+                        flag_box.add_widget(make_flag_image(c[0], 48))
+                        flag_box.bind(on_release=lambda x, item=c: self.choose_left(item))
+                        grid.add_widget(flag_box)
+                    else:
+                        grid.add_widget(make_button(
+                            c[0], lambda x, item=c: self.choose_left(item),
+                            color="#8B65C7", height=60, size=20
+                        ))
                 else:
                     grid.add_widget(Label())
                 if i < len(right):
@@ -401,7 +430,7 @@ class GameScreen(BaseScreen):
         self.clear_widgets()
         root = self.layout("🏁 OYUN SONU")
         root.add_widget(make_label(
-            f"✅ Doğru cevap: {self.correct}\n❌ Yanlış cevap: {self.wrong}\n❤️ Kalan can: {self.hearts}",
+            f"DOGRU CEVAP: {self.correct}\nYANLIS CEVAP: {self.wrong}\nKALAN CAN: {self.hearts}",
             25, 150
         ))
         if self.hearts > 0 and self.index >= len(self.questions):
@@ -416,9 +445,9 @@ class ProfileScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("👤 PROFİLİM")
-        name = store.get("player")["name"] if store.exists("player") else "Kaşif"
+        name = store.get("player")["name"] if store.exists("player") else "Oyuncu"
         root.add_widget(make_label(
-            f"👤 {name}\n\nToplam doğru cevap: {get_total()}\n🏅 Rozetler: Oyun ilerledikçe kazanılacak\n⭐ Unvan: Acemi Kaşif",
+            f"👤 {name}\n\nToplam doğru cevap: {get_total()}\n🏅 Rozetler: Oyun ilerledikçe kazanılacak\n⭐ Unvan: Acemi Oyuncu",
             20, 180
         ))
         root.add_widget(make_button("ANA MENÜ", lambda x: self.home()))
@@ -600,7 +629,7 @@ class AuthScreen(BaseScreen):
             else:
                 user = data.get("user", {})
                 username = user.get("user_metadata", {}).get("username")
-                username = username or "Kaşif"
+                username = username or "Oyuncu"
 
                 store.put(
                     "auth",
@@ -626,7 +655,7 @@ class AuthScreen(BaseScreen):
 class DunyaBayraklariApp(App):
     def build(self):
         if not store.exists("player"):
-            store.put("player", name="Kaşif")
+            store.put("player", name="Oyuncu")
 
         sm = ScreenManager()
 
