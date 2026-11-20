@@ -533,6 +533,7 @@ class AuthScreen(BaseScreen):
                 store.put(
                     "auth",
                     access_token=data["access_token"],
+                    refresh_token=data["refresh_token"],
                     user_id=user["id"]
                 )
                 store.put("player", name=username)
@@ -588,12 +589,36 @@ class DunyaBayraklariApp(App):
         sm.add_widget(SettingsScreen(name="settings"))
 
         sm.current = "splash"
-        Clock.schedule_once(
-            lambda dt: setattr(sm, "current", "auth"),
-            3
-        )
-
+        Clock.schedule_once(lambda dt: self.check_saved_session(sm), 3)
         return sm
+
+    def check_saved_session(self, sm):
+        if not store.exists("auth") or not store.get("auth").get("refresh_token"):
+            sm.current = "auth"
+            return
+        threading.Thread(target=self.refresh_session, args=(sm,), daemon=True).start()
+
+    def refresh_session(self, sm):
+        try:
+            saved = store.get("auth")
+            response = requests.post(
+                SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token",
+                headers={"apikey": SUPABASE_KEY, "Content-Type": "application/json"},
+                json={"refresh_token": saved["refresh_token"]},
+                timeout=20
+            )
+            data = response.json()
+            if response.status_code >= 400 or not data.get("access_token"):
+                raise ValueError("Oturum yenilenemedi")
+            user = data.get("user", {})
+            store.put("auth", access_token=data["access_token"], refresh_token=data["refresh_token"], user_id=user.get("id", saved.get("user_id")))
+            username = user.get("user_metadata", {}).get("username")
+            if username:
+                store.put("player", name=username)
+            Clock.schedule_once(lambda dt: setattr(sm, "current", "home"))
+        except Exception:
+            store.delete("auth")
+            Clock.schedule_once(lambda dt: setattr(sm, "current", "auth"))
 
 if __name__ == "__main__":
     DunyaBayraklariApp().run()
