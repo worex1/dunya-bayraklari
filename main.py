@@ -87,8 +87,8 @@ class BaseScreen(Screen):
             orientation="vertical",
             size_hint=(0.94, None),
             height=Window.height * 0.92,
-            padding=18,
-            spacing=16,
+            padding=8,
+            spacing=8,
             pos_hint={"center_x": 0.5, "center_y": 0.5}
         )
         root.add_widget(make_label(title, 34, 75))
@@ -99,7 +99,6 @@ class HomeScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("🌍 DÜNYA BAYRAKLARI")
-        root.add_widget(Label(text="", size_hint_y=1))
         name = store.get("player")["name"] if store.exists("player") else "Kaşif"
         root.add_widget(make_label(
             f"Merhaba {name}!\nGünlük doğrular: {get_daily()}   |   Toplam: {get_total()}",
@@ -110,7 +109,6 @@ class HomeScreen(BaseScreen):
         root.add_widget(make_button("👤 PROFİLİM", lambda x: self.go("profile")))
         root.add_widget(make_button("🏆 SIRALAMA", lambda x: self.go("ranking")))
         root.add_widget(make_button("⚙️ AYARLAR", lambda x: self.go("settings")))
-        root.add_widget(Label(text="", size_hint_y=1))
     def go(self, screen, mode=None):
         if mode:
             self.manager.get_screen("game").start(mode, 0)
@@ -120,14 +118,12 @@ class LevelScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("⭐ SEVİYELER")
-        root.add_widget(Label(text="", size_hint_y=1))
         for i in range(1, 4):
             root.add_widget(make_button(
                 f"⭐ {i}. SEVİYE - 50 ÜLKE",
                 lambda x, n=i: self.open_level(n)
             ))
         root.add_widget(make_button("⬅ ANA MENÜ", lambda x: self.home()))
-        root.add_widget(Label(text="", size_hint_y=1))
     def open_level(self, level):
         self.manager.get_screen("games").level = level
         self.manager.current = "games"
@@ -139,7 +135,6 @@ class GameMenu(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout(f"⭐ {self.level}. SEVİYE")
-        root.add_widget(Label(text="", size_hint_y=1))
         modes = [
             ("🏙️ BAŞKENTİ BUL", "capital"),
             ("🚩 BAYRAĞI TANI", "flag"),
@@ -151,7 +146,6 @@ class GameMenu(BaseScreen):
                 title, lambda x, m=mode: self.open_game(m), height=75, size=19
             ))
         root.add_widget(make_button("⬅ SEVİYELER", lambda x: self.back()))
-        root.add_widget(Label(text="", size_hint_y=1))
     def open_game(self, mode):
         self.manager.get_screen("game").start(mode, self.level)
         self.manager.current = "game"
@@ -209,7 +203,6 @@ class GameScreen(BaseScreen):
         root.add_widget(panel)
         self.add_widget(root)
 
-        panel.add_widget(Label(text="", size_hint_y=1))
         panel.add_widget(make_label("🌍 DÜNYA BAYRAKLARI", 34, 65))
         panel.add_widget(make_label(self.status(), 20, 42))
 
@@ -286,7 +279,7 @@ class GameScreen(BaseScreen):
             ))
 
             grid = GridLayout(
-                cols=2, spacing=9, padding=5,
+                cols=2, spacing=3, padding=2,
                 size_hint=(1, None), height=260,
                 row_force_default=True, row_default_height=60
             )
@@ -328,7 +321,6 @@ class GameScreen(BaseScreen):
                 color="#60758D", height=58, size=20
             ))
 
-        panel.add_widget(Label(text="", size_hint_y=1))
 
     def answer(self, choice, correct_answer):
         if self.answer_locked or self.answer_state:
