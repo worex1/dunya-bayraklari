@@ -159,6 +159,8 @@ class GameScreen(BaseScreen):
         random.shuffle(self.questions)
         self.index = 0
         self.correct = 0
+        self.answer_state = None
+        self.answer_locked = False
         self.wrong = 0
         self.hearts = 4
         self.seconds = 120
@@ -229,6 +231,7 @@ class GameScreen(BaseScreen):
             for choice in choices:
                 grid.add_widget(make_button(
                     choice, lambda x, a=choice: self.answer(a, capital),
+                    color=('#2EAD62' if self.answer_state and choice == self.answer_state[1] else '#D94343' if self.answer_state and choice == self.answer_state[0] else '#4385E8'),
                     height=88, size=25
                 ))
             panel.add_widget(grid)
@@ -251,6 +254,7 @@ class GameScreen(BaseScreen):
             for choice in choices:
                 grid.add_widget(make_button(
                     choice, lambda x, a=choice: self.answer(a, country),
+                    color=('#2EAD62' if self.answer_state and choice == self.answer_state[1] else '#D94343' if self.answer_state and choice == self.answer_state[0] else '#4385E8'),
                     height=88, size=24
                 ))
             panel.add_widget(grid)
@@ -316,18 +320,40 @@ class GameScreen(BaseScreen):
         panel.add_widget(Label(text="", size_hint_y=1))
 
     def answer(self, choice, correct_answer):
+        if self.answer_locked or self.answer_state:
+            return
+        self.answer_locked = True
+        self.answer_state = (choice, correct_answer)
         if choice == correct_answer:
             self.correct += 1
             save_correct()
-            self.index += 1
             self.show_question()
+            Clock.schedule_once(self.advance_after_correct, 0.4)
         else:
             self.wrong += 1
             self.hearts -= 1
+            self.show_question()
+            self.answer_locked = False
+
+    def advance_after_correct(self, dt):
+        self.answer_state = None
+        self.answer_locked = False
+        self.index += 1
+        if self.hearts <= 0 or self.index >= len(self.questions):
+            self.finish()
+        else:
+            self.show_question()
+
+    def on_touch_down(self, touch):
+        if self.answer_state and self.answer_state[0] != self.answer_state[1]:
+            self.answer_state = None
             if self.hearts <= 0:
                 self.finish()
             else:
+                self.index += 1
                 self.show_question()
+            return True
+        return super().on_touch_down(touch)
 
     def choose_left(self, item):
         self.selected = item
