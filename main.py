@@ -83,8 +83,15 @@ def make_flag_image(country, height=145):
 
 class BaseScreen(Screen):
     def layout(self, title):
-        root = BoxLayout(orientation="vertical", padding=22, spacing=20)
-        root.add_widget(make_label(title, 27, 65))
+        root = BoxLayout(
+            orientation="vertical",
+            size_hint=(0.94, None),
+            height=Window.height * 0.92,
+            padding=18,
+            spacing=16,
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+        root.add_widget(make_label(title, 34, 75))
         self.add_widget(root)
         return root
 
@@ -113,12 +120,14 @@ class LevelScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("⭐ SEVİYELER")
+        root.add_widget(Label(text="", size_hint_y=1))
         for i in range(1, 4):
             root.add_widget(make_button(
                 f"⭐ {i}. SEVİYE - 50 ÜLKE",
                 lambda x, n=i: self.open_level(n)
             ))
         root.add_widget(make_button("⬅ ANA MENÜ", lambda x: self.home()))
+        root.add_widget(Label(text="", size_hint_y=1))
     def open_level(self, level):
         self.manager.get_screen("games").level = level
         self.manager.current = "games"
@@ -130,6 +139,7 @@ class GameMenu(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout(f"⭐ {self.level}. SEVİYE")
+        root.add_widget(Label(text="", size_hint_y=1))
         modes = [
             ("🏙️ BAŞKENTİ BUL", "capital"),
             ("🚩 BAYRAĞI TANI", "flag"),
@@ -141,6 +151,7 @@ class GameMenu(BaseScreen):
                 title, lambda x, m=mode: self.open_game(m), height=75, size=19
             ))
         root.add_widget(make_button("⬅ SEVİYELER", lambda x: self.back()))
+        root.add_widget(Label(text="", size_hint_y=1))
     def open_game(self, mode):
         self.manager.get_screen("game").start(mode, self.level)
         self.manager.current = "game"
