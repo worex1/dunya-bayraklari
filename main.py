@@ -378,41 +378,69 @@ class SettingsScreen(BaseScreen):
 class AuthScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
-        root = self.layout("🌍 OYUNCU GİRİŞİ")
+
+        center = AnchorLayout(
+            anchor_x="center",
+            anchor_y="center"
+        )
+
+        panel = BoxLayout(
+            orientation="vertical",
+            size_hint=(0.9, None),
+            height=590,
+            spacing=14,
+            padding=20
+        )
+
+        panel.add_widget(make_label(
+            "🌍 DÜNYA BAYRAKLARI",
+            30, 85
+        ))
 
         self.username = TextInput(
             hint_text="Kullanıcı adı",
             multiline=False,
             size_hint_y=None,
-            height=55
+            height=60,
+            font_size=22
         )
+
         self.email = TextInput(
             hint_text="E-posta adresi",
             multiline=False,
             size_hint_y=None,
-            height=55
+            height=60,
+            font_size=22
         )
+
         self.password = TextInput(
             hint_text="Şifre",
             password=True,
             multiline=False,
             size_hint_y=None,
-            height=55
+            height=60,
+            font_size=22
         )
 
-        root.add_widget(self.username)
-        root.add_widget(self.email)
-        root.add_widget(self.password)
+        panel.add_widget(self.username)
+        panel.add_widget(self.email)
+        panel.add_widget(self.password)
 
-        root.add_widget(make_button(
-            "KAYIT OL", self.signup
-        ))
-        root.add_widget(make_button(
-            "GİRİŞ YAP", self.login
+        panel.add_widget(make_button(
+            "KAYIT OL", self.signup,
+            height=75, size=27
         ))
 
-        self.status = make_label("", 16, 75)
-        root.add_widget(self.status)
+        panel.add_widget(make_button(
+            "GİRİŞ YAP", self.login,
+            height=75, size=27
+        ))
+
+        self.status = make_label("", 18, 60)
+        panel.add_widget(self.status)
+
+        center.add_widget(panel)
+        self.add_widget(center)
 
     def show_message(self, message):
         self.status.text = message

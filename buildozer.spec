@@ -10,6 +10,7 @@ android.permissions = INTERNET
 orientation = portrait
 fullscreen = 0
 icon.filename = %(source.dir)s/uygulama_ikonu_kaynak.png
+presplash.filename = %(source.dir)s/presplash.png
 android.minapi = 21
 android.archs = arm64-v8a
 android.accept_sdk_license = True
