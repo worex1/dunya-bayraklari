@@ -513,8 +513,8 @@ class AuthScreen(BaseScreen):
                     lambda dt: setattr(self.manager, "current", "home")
                 )
 
-        except Exception:
-            message = "Bağlantı kurulamadı. Tekrar dene."
+        except Exception as e:
+            message = f"Hata: {type(e).__name__}: {e}"
 
         Clock.schedule_once(
             lambda dt: self.show_message(message)
