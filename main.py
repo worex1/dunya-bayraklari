@@ -42,16 +42,18 @@ def get_daily():
     d = store.get("daily")
     return d["count"] if d["date"] == str(date.today()) else 0
 
-def make_button(text, callback, color="#4385E8", height=70, size=21):
+def make_button(text, callback, color="#4385E8", height=82, size=25):
     b = Button(
         text=text, size_hint_y=None, height=height,
         background_normal="", background_color=get_color_from_hex(color),
-        color=(1,1,1,1), font_size=size, bold=True
+        color=(1,1,1,1), font_size=size, bold=True,
+        halign="center", valign="middle",
+        text_size=(Window.width * 0.42, None)
     )
     b.bind(on_release=callback)
     return b
 
-def make_label(text, size=25, height=100):
+def make_label(text, size=29, height=105):
     return Label(
         text=text,
         font_size=size,
@@ -59,7 +61,7 @@ def make_label(text, size=25, height=100):
         color=get_color_from_hex("#243B63"),
         halign="center",
         valign="middle",
-        text_size=(Window.width - 30, None),
+        text_size=(Window.width - 24, None),
         size_hint_y=None,
         height=height
     )
@@ -178,14 +180,28 @@ class GameScreen(BaseScreen):
 
     def show_question(self):
         self.clear_widgets()
-        root = self.layout("🌍 DÜNYA BAYRAKLARI")
-        root.add_widget(make_label(self.status(), 18, 45))
+
+        root = AnchorLayout(
+            anchor_x="center", anchor_y="center"
+        )
+        panel = BoxLayout(
+            orientation="vertical",
+            size_hint=(0.96, None),
+            height=Window.height * 0.94,
+            padding=8,
+            spacing=8
+        )
+        root.add_widget(panel)
+        self.add_widget(root)
+
+        panel.add_widget(make_label("🌍 DÜNYA BAYRAKLARI", 30, 55))
+        panel.add_widget(make_label(self.status(), 20, 42))
 
         if self.mode == "flag":
             self.timer_label = make_label(
-                f"⏱️ Kalan süre: {self.seconds} saniye", 20, 45
+                f"⏱️ Kalan süre: {self.seconds} saniye", 22, 42
             )
-            root.add_widget(self.timer_label)
+            panel.add_widget(self.timer_label)
 
         if self.hearts <= 0 or self.index >= len(self.questions):
             self.finish()
@@ -193,97 +209,106 @@ class GameScreen(BaseScreen):
 
         if self.mode in ("capital", "all"):
             country, capital, flag = self.questions[self.index]
-            root.add_widget(make_label(country, 34, 65))
-            root.add_widget(make_flag_image(country, 145))
-            root.add_widget(make_label("Bu ülkenin başkenti hangisi?", 30, 85))
+            panel.add_widget(make_label(country, 38, 58))
+            panel.add_widget(make_flag_image(country, 155))
+            panel.add_widget(make_label(
+                "Bu ülkenin başkenti hangisi?", 29, 65
+            ))
             choices = [capital] + random.sample(
                 [c[1] for c in COUNTRIES if c[1] != capital], 3
             )
             random.shuffle(choices)
             grid = GridLayout(
-                cols=2, spacing=16, padding=12,
-                size_hint=(1, None), height=232,
-                row_force_default=True, row_default_height=100
+                cols=2, spacing=10, padding=5,
+                size_hint=(1, None), height=190,
+                row_force_default=True, row_default_height=88
             )
             for choice in choices:
                 grid.add_widget(make_button(
                     choice, lambda x, a=choice: self.answer(a, capital),
-                    height=100, size=27
+                    height=88, size=25
                 ))
-            anchor = AnchorLayout(
-                anchor_x="center",
-                anchor_y="center",
-                size_hint=(1, None),
-                height=270
-            )
-            anchor.add_widget(grid)
-            root.add_widget(anchor)
+            panel.add_widget(grid)
 
         elif self.mode == "flag":
             country, capital, flag = self.questions[self.index]
-            root.add_widget(make_flag_image(country, 170))
-            root.add_widget(make_label("Bu bayrak hangi ülkenin?", 30, 85))
+            panel.add_widget(make_flag_image(country, 190))
+            panel.add_widget(make_label(
+                "Bu bayrak hangi ülkenin?", 30, 65
+            ))
             choices = [country] + random.sample(
                 [c[0] for c in COUNTRIES if c[0] != country], 3
             )
             random.shuffle(choices)
             grid = GridLayout(
-                cols=2, spacing=16, padding=12,
-                size_hint=(1, None), height=232,
-                row_force_default=True, row_default_height=100
+                cols=2, spacing=10, padding=5,
+                size_hint=(1, None), height=190,
+                row_force_default=True, row_default_height=88
             )
             for choice in choices:
                 grid.add_widget(make_button(
                     choice, lambda x, a=choice: self.answer(a, country),
-                    height=100, size=27
+                    height=88, size=24
                 ))
-            anchor = AnchorLayout(
-                anchor_x="center",
-                anchor_y="center",
-                size_hint=(1, None),
-                height=270
-            )
-            anchor.add_widget(grid)
-            root.add_widget(anchor)
+            panel.add_widget(grid)
 
         elif self.mode in ("match", "pair"):
             if not self.match_pairs:
-                self.match_pairs = random.sample(self.questions[self.index:], min(4, len(self.questions)-self.index))
+                self.match_pairs = random.sample(
+                    self.questions[self.index:],
+                    min(4, len(self.questions)-self.index)
+                )
                 self.matched = []
                 self.selected = None
+
             title = "Bayrakları ülkelerle eşleştir" if self.mode == "match" else "Ülkeleri başkentleriyle eşleştir"
-            root.add_widget(make_label(title, 22, 55))
-            root.add_widget(make_label(
-                "Önce soldan seç, sonra sağdan eşini seç.", 17, 45
+            panel.add_widget(make_label(title, 25, 55))
+            panel.add_widget(make_label(
+                "Önce soldan seç, sonra sağdan eşini seç.", 19, 42
             ))
-            left = []
-            right = []
-            for c in self.match_pairs:
-                if c not in self.matched:
-                    left.append(c)
-                    right.append(c)
+
+            grid = GridLayout(
+                cols=2, spacing=9, padding=5,
+                size_hint=(1, None), height=260,
+                row_force_default=True, row_default_height=60
+            )
+            left = [c for c in self.match_pairs if c not in self.matched]
+            right = left[:]
             random.shuffle(left)
             random.shuffle(right)
-            for c in left:
-                text = c[2] if self.mode == "match" else c[0]
-                root.add_widget(make_button(
-                    text, lambda x, item=c: self.choose_left(item),
-                    color="#8B65C7", height=58, size=20
-                ))
-            root.add_widget(make_label("↓ EŞLEŞTİR ↓", 17, 35))
-            for c in right:
-                if c not in self.matched:
-                    text = c[0] if self.mode == "match" else c[1]
-                    root.add_widget(make_button(
-                        text, lambda x, item=c: self.choose_right(item),
-                        color="#E68A43", height=58, size=18
-                    ))
-            if self.selected:
-                root.add_widget(make_label("Seçimin: " + (
-                    self.selected[2] if self.mode == "match" else self.selected[0]
-                ), 17, 35))
 
-        root.add_widget(make_button("🏠 ANA MENÜ", lambda x: self.back_home(), color="#60758D", height=55, size=17))
+            for i in range(max(len(left), len(right))):
+                if i < len(left):
+                    c = left[i]
+                    txt = c[2] if self.mode == "match" else c[0]
+                    grid.add_widget(make_button(
+                        txt, lambda x, item=c: self.choose_left(item),
+                        color="#8B65C7", height=60, size=20
+                    ))
+                else:
+                    grid.add_widget(Label())
+                if i < len(right):
+                    c = right[i]
+                    txt = c[0] if self.mode == "match" else c[1]
+                    grid.add_widget(make_button(
+                        txt, lambda x, item=c: self.choose_right(item),
+                        color="#E68A43", height=60, size=20
+                    ))
+                else:
+                    grid.add_widget(Label())
+
+            panel.add_widget(grid)
+            if self.selected:
+                panel.add_widget(make_label(
+                    "Seçimin: " + (
+                        self.selected[2] if self.mode == "match" else self.selected[0]
+                    ), 19, 40
+                ))
+
+            panel.add_widget(make_button(
+                "🏠 ANA MENÜ", lambda x: self.back_home(),
+                color="#60758D", height=58, size=20
+            ))
 
     def answer(self, choice, correct_answer):
         if choice == correct_answer:
