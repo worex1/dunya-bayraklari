@@ -86,14 +86,20 @@ class BaseScreen(Screen):
         root = BoxLayout(
             orientation="vertical",
             size_hint=(0.94, None),
-            height=Window.height * 0.92,
             padding=8,
-            spacing=8,
-            pos_hint={"center_x": 0.5, "center_y": 0.5}
+            spacing=8
         )
         root.add_widget(make_label(title, 34, 75))
-        self.add_widget(root)
+        root.bind(minimum_height=root.setter("height"))
+
+        anchor = AnchorLayout(
+            anchor_x="center",
+            anchor_y="center"
+        )
+        anchor.add_widget(root)
+        self.add_widget(anchor)
         return root
+
 
 class HomeScreen(BaseScreen):
     def on_pre_enter(self):
@@ -166,6 +172,7 @@ class GameScreen(BaseScreen):
         self.correct = 0
         self.answer_state = None
         self.answer_locked = False
+        self.current_choices = None
         self.wrong = 0
         self.hearts = 4
         self.seconds = 120
@@ -196,10 +203,10 @@ class GameScreen(BaseScreen):
         panel = BoxLayout(
             orientation="vertical",
             size_hint=(0.96, None),
-            height=Window.height * 0.94,
             padding=3,
             spacing=3
         )
+        panel.bind(minimum_height=panel.setter("height"))
         root.add_widget(panel)
         self.add_widget(root)
 
@@ -223,10 +230,12 @@ class GameScreen(BaseScreen):
             panel.add_widget(make_label(
                 "Bu ülkenin başkenti hangisi?", 29, 65
             ))
-            choices = [capital] + random.sample(
-                [c[1] for c in COUNTRIES if c[1] != capital], 3
-            )
-            random.shuffle(choices)
+            if self.current_choices is None:
+                self.current_choices = [capital] + random.sample(
+                    [c[1] for c in COUNTRIES if c[1] != capital], 3
+                )
+                random.shuffle(self.current_choices)
+            choices = self.current_choices
             grid = GridLayout(
                 cols=2, spacing=10, padding=5,
                 size_hint=(1, None), height=190,
@@ -246,10 +255,12 @@ class GameScreen(BaseScreen):
             panel.add_widget(make_label(
                 "Bu bayrak hangi ülkenin?", 30, 65
             ))
-            choices = [country] + random.sample(
-                [c[0] for c in COUNTRIES if c[0] != country], 3
-            )
-            random.shuffle(choices)
+            if self.current_choices is None:
+                self.current_choices = [country] + random.sample(
+                    [c[0] for c in COUNTRIES if c[0] != country], 3
+                )
+                random.shuffle(self.current_choices)
+            choices = self.current_choices
             grid = GridLayout(
                 cols=2, spacing=10, padding=5,
                 size_hint=(1, None), height=190,
@@ -341,6 +352,7 @@ class GameScreen(BaseScreen):
     def advance_after_correct(self, dt):
         self.answer_state = None
         self.answer_locked = False
+        self.current_choices = None
         self.index += 1
         if self.hearts <= 0 or self.index >= len(self.questions):
             self.finish()
@@ -353,6 +365,7 @@ class GameScreen(BaseScreen):
             if self.hearts <= 0:
                 self.finish()
             else:
+                self.current_choices = None
                 self.index += 1
                 self.show_question()
             return True
