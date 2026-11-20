@@ -1,3 +1,4 @@
+from supabase_config import SUPABASE_URL, SUPABASE_KEY
 import requests
 import threading
 from kivy.uix.textinput import TextInput
@@ -483,8 +484,8 @@ class AuthScreen(BaseScreen):
             else:
                 message = "Kayıt başarılı! E-postanı doğrula, sonra giriş yap."
 
-        except Exception:
-            message = "Bağlantı kurulamadı. İnternetini kontrol et."
+        except Exception as e:
+            message = f"Kayıt hatası: {type(e).__name__}: {e}"
 
         Clock.schedule_once(
             lambda dt: self.show_message(message)
