@@ -42,7 +42,7 @@ def get_daily():
     d = store.get("daily")
     return d["count"] if d["date"] == str(date.today()) else 0
 
-def make_button(text, callback, color="#4385E8", height=82, size=25):
+def make_button(text, callback, color="#4385E8", height=105, size=30):
     b = Button(
         text=text, size_hint_y=None, height=height,
         background_normal="", background_color=get_color_from_hex(color),
@@ -53,7 +53,7 @@ def make_button(text, callback, color="#4385E8", height=82, size=25):
     b.bind(on_release=callback)
     return b
 
-def make_label(text, size=29, height=105):
+def make_label(text, size=34, height=120):
     return Label(
         text=text,
         font_size=size,
@@ -83,7 +83,7 @@ def make_flag_image(country, height=145):
 
 class BaseScreen(Screen):
     def layout(self, title):
-        root = BoxLayout(orientation="vertical", padding=15, spacing=12)
+        root = BoxLayout(orientation="vertical", padding=22, spacing=20)
         root.add_widget(make_label(title, 27, 65))
         self.add_widget(root)
         return root
