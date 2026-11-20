@@ -197,8 +197,8 @@ class GameScreen(BaseScreen):
             orientation="vertical",
             size_hint=(0.96, None),
             height=Window.height * 0.94,
-            padding=8,
-            spacing=8
+            padding=3,
+            spacing=3
         )
         root.add_widget(panel)
         self.add_widget(root)
