@@ -525,7 +525,30 @@ class DunyaBayraklariApp(App):
     def build(self):
         if not store.exists("player"):
             store.put("player", name="Kaşif")
+
         sm = ScreenManager()
+
+        splash = Screen(name="splash")
+        splash_layout = BoxLayout(
+            orientation="vertical",
+            padding=25,
+            spacing=20
+        )
+        splash_layout.add_widget(Label(
+            text="🌍 DÜNYA BAYRAKLARI",
+            font_size=28,
+            bold=True,
+            color=get_color_from_hex("#243B63")
+        ))
+        splash_layout.add_widget(Image(
+            source="uygulama_ikonu_kaynak.png",
+            size_hint=(1, 0.75),
+            allow_stretch=True,
+            keep_ratio=True
+        ))
+        splash.add_widget(splash_layout)
+        sm.add_widget(splash)
+
         sm.add_widget(AuthScreen(name="auth"))
         sm.add_widget(HomeScreen(name="home"))
         sm.add_widget(LevelScreen(name="levels"))
@@ -534,6 +557,13 @@ class DunyaBayraklariApp(App):
         sm.add_widget(ProfileScreen(name="profile"))
         sm.add_widget(RankingScreen(name="ranking"))
         sm.add_widget(SettingsScreen(name="settings"))
+
+        sm.current = "splash"
+        Clock.schedule_once(
+            lambda dt: setattr(sm, "current", "auth"),
+            3
+        )
+
         return sm
 
 if __name__ == "__main__":
