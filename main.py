@@ -92,6 +92,7 @@ class HomeScreen(BaseScreen):
     def on_pre_enter(self):
         self.clear_widgets()
         root = self.layout("🌍 DÜNYA BAYRAKLARI")
+        root.add_widget(Label(text="", size_hint_y=1))
         name = store.get("player")["name"] if store.exists("player") else "Kaşif"
         root.add_widget(make_label(
             f"Merhaba {name}!\nGünlük doğrular: {get_daily()}   |   Toplam: {get_total()}",
@@ -102,6 +103,7 @@ class HomeScreen(BaseScreen):
         root.add_widget(make_button("👤 PROFİLİM", lambda x: self.go("profile")))
         root.add_widget(make_button("🏆 SIRALAMA", lambda x: self.go("ranking")))
         root.add_widget(make_button("⚙️ AYARLAR", lambda x: self.go("settings")))
+        root.add_widget(Label(text="", size_hint_y=1))
     def go(self, screen, mode=None):
         if mode:
             self.manager.get_screen("game").start(mode, 0)
@@ -194,7 +196,8 @@ class GameScreen(BaseScreen):
         root.add_widget(panel)
         self.add_widget(root)
 
-        panel.add_widget(make_label("🌍 DÜNYA BAYRAKLARI", 30, 55))
+        panel.add_widget(Label(text="", size_hint_y=1))
+        panel.add_widget(make_label("🌍 DÜNYA BAYRAKLARI", 34, 65))
         panel.add_widget(make_label(self.status(), 20, 42))
 
         if self.mode == "flag":
@@ -309,6 +312,8 @@ class GameScreen(BaseScreen):
                 "🏠 ANA MENÜ", lambda x: self.back_home(),
                 color="#60758D", height=58, size=20
             ))
+
+        panel.add_widget(Label(text="", size_hint_y=1))
 
     def answer(self, choice, correct_answer):
         if choice == correct_answer:
